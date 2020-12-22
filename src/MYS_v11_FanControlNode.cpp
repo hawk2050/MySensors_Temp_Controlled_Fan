@@ -41,7 +41,7 @@ https://forum.mysensors.org/topic/4276/converting-a-sketch-from-1-5-x-to-2-0-x/2
 
 // Enable debug prints to serial monitor
 //#define MY_DEBUG
-#define DEBUG_RCC 1
+//#define DEBUG_RCC
 
 // Enable and select radio type attached
 #define MY_RADIO_RF24
@@ -91,8 +91,8 @@ gateway fails*/
 
 static const uint32_t DAY_UPDATE_INTERVAL_MS = 10000;
 
-static const float temperature_fan_on = 26.3;
-static const float temperature_fan_off = 26.0;
+static const float temperature_fan_on = 27.5;
+static const float temperature_fan_off = 24.0;
 
 
 enum child_id_t
