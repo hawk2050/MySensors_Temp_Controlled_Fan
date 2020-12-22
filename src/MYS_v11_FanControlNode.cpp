@@ -91,8 +91,8 @@ gateway fails*/
 
 static const uint32_t DAY_UPDATE_INTERVAL_MS = 10000;
 
-static const int16_t temperature_fan_on = 25;
-static const int16_t temperature_fan_off = 24;
+static const float temperature_fan_on = 26.3;
+static const float temperature_fan_off = 26.0;
 
 
 enum child_id_t
@@ -104,8 +104,6 @@ enum child_id_t
   CHILD_ID_EXT_VOLTAGE,
   CHILD_ID_RELAY_1
 };
-
-uint32_t clockSwitchCount = 0;
 
 /*****************************/
 /********* FUNCTIONS *********/
@@ -126,10 +124,7 @@ void readHTU21DHumidity(bool force);
 uint8_t fan1_control_pin = RELAY_PIN;
 
 MyMessage msgFan(CHILD_ID_RELAY_1,V_STATUS);
-
-
 MyMessage msgVolt(CHILD_ID_VOLTAGE, V_VOLTAGE);
-void switchClock(unsigned char clk);
 
 bool fanState = false;
 
@@ -179,16 +174,16 @@ void setup()
 void presentation()
 {
    // Send the sketch version information to the gateway and Controller
-  //sendSketchInfo(sketchString, "0.6");
+  sendSketchInfo(sketchString, "0.6");
   // Register all sensors to gateway (they will be created as child devices)
-  //present(CHILD_ID_VOLTAGE, S_MULTIMETER);
+  present(CHILD_ID_VOLTAGE, S_MULTIMETER);
 
   // Register all sensors to gw (they will be created as child devices)
-  //present(CHILD_ID_RELAY_1, S_BINARY);
+  present(CHILD_ID_RELAY_1, S_BINARY);
   
 #if TEMP_HUM_SENSOR
-  //present(CHILD_ID_HUMIDITY, S_HUM);
-  //present(CHILD_ID_TEMP, S_TEMP);
+  present(CHILD_ID_HUMIDITY, S_HUM);
+  present(CHILD_ID_TEMP, S_TEMP);
 #endif
 
    
@@ -201,36 +196,36 @@ void loop()
   uint32_t update_interval_ms = DAY_UPDATE_INTERVAL_MS;
   float current_temperature;
   uint16_t battLevel = batt.getVoltage();
-  //send(msgVolt.set(battLevel,1));
+  send(msgVolt.set(battLevel,1));
 
 #if TEMP_HUM_SENSOR
   current_temperature = readHTU21DTemperature(true);
   readHTU21DHumidity(true);
 #endif
 
-  if (current_temperature >= temperature_fan_on or fanState == false)
+  if (current_temperature >= temperature_fan_on and fanState == false)
   {
     digitalWrite(fan1_control_pin, RELAY_ON);
     fanState = true;
-    //send(msgFan.set(true));
+    
     #if DEBUG_RCC
     Serial.print("Switching fan on");
     Serial.println();
     #endif
   }
-
-  sleep(update_interval_ms); 
-
-  if (current_temperature <= temperature_fan_off or fanState == true)
+  
+  if (current_temperature <= temperature_fan_off and fanState == true)
   {
     digitalWrite(fan1_control_pin, RELAY_OFF);
     fanState = false;
-    //send(msgFan.set(false));
+    send(msgFan.set(false));
     #if DEBUG_RCC
     Serial.print("Switching fan off");
     Serial.println();
     #endif
   }
+
+  send(msgFan.set(fanState));
 
   sleep(update_interval_ms); 
   
@@ -252,7 +247,7 @@ float readHTU21DTemperature(bool force)
 
   if(lastTemp != temp)
   {
-    //send(msgTemp.set(temp,1));
+    send(msgTemp.set(temp,1));
     lastTemp = temp;
     #ifdef DEBUG_RCC
     Serial.print(" Temperature:");
@@ -277,7 +272,7 @@ void readHTU21DHumidity(bool force)
 
   if(lastHumidity != humd)
   {
-    //send(msgHum.set(humd,1));
+    send(msgHum.set(humd,1));
     lastHumidity = humd;
     #ifdef DEBUG_RCC
     Serial.print(" Humidity:");
